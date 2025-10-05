@@ -1,0 +1,92 @@
+Table customers {
+  customer_id varchar [pk]
+  company_name text [not null]
+  contact_name text
+  contact_title text
+  address text
+  city text
+  region text
+  postal_code text
+  country text
+  phone text
+  fax text
+  created_at timestamptz
+  updated_at timestamptz
+}
+
+Table employees {
+  employee_id int [pk]
+  last_name text [not null]
+  first_name text [not null]
+  title text
+  title_of_courtesy text
+  birth_date date
+  hire_date date
+  address text
+  city text
+  region text
+  postal_code text
+  country text
+  home_phone text
+  extension text
+  notes text
+  reports_to int
+  created_at timestamptz
+  updated_at timestamptz
+}
+
+Table orders {
+  order_id int [pk]
+  customer_id varchar [ref: > customers.customer_id]
+  employee_id int [ref: > employees.employee_id]
+  order_date date
+  required_date date
+  shipped_date date
+  ship_via int
+  freight numeric
+  ship_name text
+  ship_address text
+  ship_city text
+  ship_region text
+  ship_postal_code text
+  ship_country text
+  created_at timestamptz
+  updated_at timestamptz
+}
+
+Table categories {
+  category_id int [pk]
+  category_name text [not null]
+  description text
+  created_at timestamptz
+  updated_at timestamptz
+}
+
+Table products {
+  product_id int [pk]
+  product_name text [not null]
+  supplier_id int
+  category_id int [ref: > categories.category_id]
+  quantity_per_unit text
+  unit_price numeric
+  units_in_stock int
+  units_on_order int
+  reorder_level int
+  discontinued int
+  created_at timestamptz
+  updated_at timestamptz
+}
+
+Table order_details {
+  order_id int [ref: > orders.order_id]
+  product_id int [ref: > products.product_id]
+  unit_price numeric [not null]
+  quantity int [not null]
+  discount numeric [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  indexes {
+    (order_id, product_id) [pk]
+  }
+}
+

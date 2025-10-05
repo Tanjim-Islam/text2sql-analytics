@@ -38,6 +38,7 @@ PDF mapping (what section satisfies what)
 | How to test it | Testing requirements and testing suite |
 | Troubleshooting | Tips and FAQ |
 | Deliverables checklist | Deliverables and submission guidelines |
+| Future work | Bonus items |
 
 Prerequisites
 
@@ -105,6 +106,10 @@ Database setup
 - Verify connections
   - Admin: run `python -c "import os;from text2sql_analytics.database import Database;print(Database.from_env().select_one())"` with admin env.
   - Read-only: set `DB_USER_RO`, `DB_PASS_RO` then run the same; expect `1`.
+
+Schema diagram
+
+- Database schema visualization: https://dbdiagram.io/d/68e2ba53d2b621e42258d7a9
 
 Data loading and normalization
 
@@ -254,3 +259,9 @@ uvicorn text2sql_analytics.api:app --reload
 - Query execution plans and optimization suggestions
 - Real-time performance metrics
 - Cross-platform compatibility
+
+**Recent updates**
+
+- Strengthened SQL validator to also block transaction control statements (BEGIN/START TRANSACTION/SAVEPOINT/RELEASE SAVEPOINT)
+- Structured JSON logging with correlation IDs added to API (`x-correlation-id` header supported)
+- Improved DB setup script to strip SQL comments before splitting; ensures full schema & roles are applied reliably

@@ -39,6 +39,7 @@ Notes
 - Timeout confirmation
   - Database `statement_timeout` set to 5000ms via connection options.
   - Validator ensures queries are SELECT-only and applies a LIMIT if missing.
+  - Transaction control statements are rejected by the validator to harden against mutations.
 
 3. Normalization summary
 
@@ -109,6 +110,8 @@ PY
 - ✅ Query execution plan analysis and optimization tips
 - ✅ Comprehensive documentation and setup instructions
 - ✅ Cross-platform compatibility (Windows, macOS, Linux)
+- ✅ Structured API logging with correlation IDs; non-leaky error messages
+- ✅ Robust schema initialization: comment-stripping and idempotent role setup
 
 6. Repro steps
 

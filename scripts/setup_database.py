@@ -6,6 +6,7 @@ from typing import Iterable
 
 import psycopg
 from dotenv import load_dotenv
+import re
 
 
 ADMIN_USER = os.getenv("DB_USER_ADMIN", "admin")
@@ -40,9 +41,18 @@ ROLE_STATEMENTS: Iterable[str] = [
 
 
 BLOCK_MUTATIONS: Iterable[str] = [
+    # read-only role cannot create/alter/drop
     f"REVOKE CREATE ON SCHEMA public FROM {READ_ONLY_USER};",
     f"GRANT CONNECT ON DATABASE {DB_NAME} TO {READ_ONLY_USER};",
 ]
+
+
+def _strip_sql_comments(sql: str) -> str:
+    # Remove /* ... */ blocks
+    sql = re.sub(r"/\*.*?\*/", " ", sql, flags=re.S)
+    # Remove -- ... end of line
+    sql = re.sub(r"--.*?(\n|$)", " ", sql)
+    return sql
 
 
 def main() -> int:
@@ -63,7 +73,9 @@ def main() -> int:
                 schema_path = os.path.abspath(schema_path)
                 if os.path.exists(schema_path):
                     with open(schema_path, "r", encoding="utf-8") as f:
-                        sql = f.read()
+                        raw_sql = f.read()
+                    # Remove comments before splitting to avoid semicolons inside comments
+                    sql = _strip_sql_comments(raw_sql)
                     for stmt in [s.strip() for s in sql.split(";") if s.strip()]:
                         try:
                             cur.execute(stmt)

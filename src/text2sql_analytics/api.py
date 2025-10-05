@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from datetime import datetime
 import time
@@ -9,9 +9,11 @@ from pydantic import BaseModel
 from .text2sql_engine import Text2SQLEngine
 from .query_validator import sanitize_and_validate
 from .config import get_settings
+from .utils import get_logger, set_correlation_id
 
 
 app = FastAPI()
+log = get_logger(__name__)
 engine = Text2SQLEngine.create()
 engine.use_llm = False
 
@@ -33,6 +35,23 @@ class QueryIn(BaseModel):
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
+
+
+@app.middleware("http")
+async def add_correlation_and_logging(request: Request, call_next):
+    cid = request.headers.get("x-correlation-id")
+    cid = set_correlation_id(cid)
+    start = time.time()
+    try:
+        response = await call_next(request)
+    except Exception as exc:  # noqa: BLE001
+        log.error(f"request failed: {exc}")
+        raise
+    finally:
+        dur_ms = int((time.time() - start) * 1000)
+        log.info(f"{request.method} {request.url.path} {dur_ms}ms")
+    response.headers["x-correlation-id"] = cid
+    return response
 
 
 @app.get("/metrics")

@@ -16,6 +16,15 @@ BLOCKED_KEYWORDS: Final[tuple[str, ...]] = (
     "REVOKE",
     "COMMIT",
     "ROLLBACK",
+    "BEGIN",
+)
+
+# multi-word blocked patterns for transaction control
+BLOCKED_PATTERNS: Final[tuple[str, ...]] = (
+    r"\bSTART\s+TRANSACTION\b",
+    r"\bSET\s+TRANSACTION\b",
+    r"\bSAVEPOINT\b",
+    r"\bRELEASE\s+SAVEPOINT\b",
 )
 
 BLOCKED_SCHEMAS: Final[tuple[str, ...]] = (
@@ -37,7 +46,10 @@ def _is_select_only(sql: str) -> bool:
 
 def _contains_blocked_keywords(sql: str) -> bool:
     up = sql.upper()
-    return any(re.search(rf"\b{kw}\b", up) for kw in BLOCKED_KEYWORDS)
+    if any(re.search(rf"\b{kw}\b", up) for kw in BLOCKED_KEYWORDS):
+        return True
+    # Check multi-word patterns case-insensitively
+    return any(re.search(pat, sql, flags=re.I) for pat in BLOCKED_PATTERNS)
 
 
 def _contains_blocked_schemas(sql: str) -> bool:
