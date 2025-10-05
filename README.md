@@ -38,7 +38,6 @@ PDF mapping (what section satisfies what)
 | How to test it | Testing requirements and testing suite |
 | Troubleshooting | Tips and FAQ |
 | Deliverables checklist | Deliverables and submission guidelines |
-| Future work | Bonus items |
 
 Prerequisites
 
