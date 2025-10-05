@@ -1,0 +1,20 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:14
+    container_name: t2s_postgres
+    environment:
+      POSTGRES_USER: ${DB_USER_ADMIN:-admin}
+      POSTGRES_PASSWORD: ${DB_PASS_ADMIN:-changeme}
+      POSTGRES_DB: ${DB_NAME:-northwind}
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+volumes:
+  pgdata:
