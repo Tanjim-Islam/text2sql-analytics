@@ -11,6 +11,7 @@ def _engine():
 
 
 def test_monthly_sales_per_category_with_subquery():
+    # Q: Year-over-year sales growth per category (monthly breakdown proxy)
     eng = _engine()
     sql = (
         "WITH od AS (SELECT od.order_id, od.product_id, (od.unit_price * od.quantity) AS amount FROM order_details od), "
@@ -26,6 +27,7 @@ def test_monthly_sales_per_category_with_subquery():
 
 
 def test_top_customers_by_spend_with_cte_and_limit():
+    # Q: Top customers by total lifetime value (spend)
     eng = _engine()
     sql = (
         "WITH line AS (SELECT order_id, (unit_price * quantity) AS amount FROM order_details), "
@@ -39,6 +41,7 @@ def test_top_customers_by_spend_with_cte_and_limit():
 
 
 def test_employee_order_counts_with_self_reference():
+    # Q: Employee performance — order counts per employee
     eng = _engine()
     sql = (
         "SELECT e.employee_id, e.first_name, e.last_name, COUNT(o.order_id) AS cnt "
@@ -51,6 +54,7 @@ def test_employee_order_counts_with_self_reference():
 
 
 def test_low_stock_products_with_orders():
+    # Q: Products with low stock (operational insight)
     eng = _engine()
     sql = (
         "SELECT p.product_id, p.product_name, p.units_in_stock FROM products p "
@@ -62,6 +66,7 @@ def test_low_stock_products_with_orders():
 
 
 def test_orders_without_details():
+    # Q: Orders without line items (data quality)
     eng = _engine()
     sql = (
         "SELECT o.order_id FROM orders o "

@@ -63,7 +63,7 @@ source .venv/bin/activate  # macOS/Linux
 
 python - << 'PY'
 import os, sys
-sys.path.insert(0, 'text2sql-analytics')
+sys.path.insert(0, 'src')
 from text2sql_analytics.data_loader import DataLoader, LoaderConfig
 cfg = LoaderConfig(
   db_host=os.getenv('DB_HOST','localhost'),
@@ -99,7 +99,6 @@ PY
 - In-memory caching with schema signature prevented redundant LLM calls.
 - Cross-platform compatibility maintained through proper path handling.
 
-
 **Final deliverables achieved:**
 
 - ✅ Working code with 89% test coverage (exceeds 80% target)
@@ -116,14 +115,13 @@ PY
 **Complete setup and evaluation:**
 
 ```
-# from repo root
+# from project root: text2sql-analytics/
 # Activate virtual environment
 source .venv/bin/activate  # macOS/Linux
 # OR
 .\.venv\Scripts\activate  # Windows
 
-pip install -e text2sql-analytics
-cd text2sql-analytics
+pip install -e .
 
 # Optionally run Postgres via Docker
 docker compose up -d postgres

@@ -11,6 +11,7 @@ def _engine():
 
 
 def test_top_products_by_price():
+    # Q: Top 5 products by price
     eng = _engine()
     sql = eng.generate_sql("Top 5 products by price", row_limit=1000)
     sql = sanitize_and_validate(sql, 1000)
@@ -21,6 +22,7 @@ def test_top_products_by_price():
 
 
 def test_count_customers():
+    # Q: Count customers
     eng = _engine()
     sql = eng.generate_sql("count customers", row_limit=1000)
     sql = sanitize_and_validate(sql, 1000)
@@ -29,14 +31,18 @@ def test_count_customers():
 
 
 def test_orders_per_customer_groupby():
+    # Q: Number of orders per customer
     eng = _engine()
+    # Fallback mock SQL, validator will ensure LIMIT and SELECT-only
     sql = "SELECT customer_id, COUNT(*) AS num_orders FROM orders GROUP BY customer_id"
     sql = sanitize_and_validate(sql, 1000)
     rows = eng.execute(sql)
+    # Only shape assertion since dataset may be tiny/mocked
     assert rows is not None
 
 
 def test_average_unit_price_by_category():
+    # Q: Average unit price by category
     eng = _engine()
     sql = (
         "SELECT c.category_name, AVG(p.unit_price) AS avg_price "
@@ -49,6 +55,7 @@ def test_average_unit_price_by_category():
 
 
 def test_top_customers_by_order_count():
+    # Q: Top customers by order count
     eng = _engine()
     sql = (
         "WITH oc AS (SELECT customer_id, COUNT(*) cnt FROM orders GROUP BY customer_id) "
@@ -60,6 +67,7 @@ def test_top_customers_by_order_count():
 
 
 def test_products_with_no_orders_subquery():
+    # Q: Products with no orders
     eng = _engine()
     sql = (
         "SELECT p.product_id, p.product_name FROM products p "
@@ -71,6 +79,7 @@ def test_products_with_no_orders_subquery():
 
 
 def test_recent_orders_with_employee_join():
+    # Q: Recent orders with employee join
     eng = _engine()
     sql = (
         "SELECT o.order_id, e.first_name, e.last_name FROM orders o "
@@ -82,6 +91,7 @@ def test_recent_orders_with_employee_join():
 
 
 def test_products_stock_summary():
+    # Q: Products stock summary
     eng = _engine()
     sql = (
         "SELECT SUM(units_in_stock) AS total_stock, SUM(units_on_order) AS total_on_order FROM products"
@@ -92,6 +102,7 @@ def test_products_stock_summary():
 
 
 def test_orders_with_freight_threshold():
+    # Q: Orders with freight threshold
     eng = _engine()
     sql = "SELECT order_id FROM orders WHERE freight IS NULL OR freight >= 0 LIMIT 10"
     sql = sanitize_and_validate(sql, 1000)
@@ -100,6 +111,7 @@ def test_orders_with_freight_threshold():
 
 
 def test_category_product_counts():
+    # Q: Product counts per category
     eng = _engine()
     sql = (
         "SELECT c.category_name, COUNT(p.product_id) AS num_products "

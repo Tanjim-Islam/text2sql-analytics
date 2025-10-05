@@ -50,16 +50,15 @@ Prerequisites
 Quick start
 
 ```
-# from repo root
+# from project root: text2sql-analytics/
 # Activate virtual environment
 source .venv/bin/activate  # macOS/Linux
 # OR
 .\.venv\Scripts\activate  # Windows
 
-pip install -e text2sql-analytics
+pip install -e .
 
 # Option A: Docker
-cd text2sql-analytics
 docker compose up -d postgres
 
 # Initialize schema and roles
@@ -96,7 +95,7 @@ Configuration (environment)
 Database setup
 
 - Path A: Docker Compose (5433)
-  - `cd text2sql-analytics && docker compose up -d postgres`
+  - `docker compose up -d postgres`
   - A named volume persists data. Port 5433 on host maps to 5432 in the container.
 - Path B: Local PostgreSQL (5432)
   - Start your server and ensure admin credentials in `.env`.
@@ -110,7 +109,7 @@ Database setup
 
 Data loading and normalization
 
-- Place `northwind.xlsx` at `text2sql-analytics/data/raw/northwind.xlsx`.
+- Place `northwind.xlsx` at `data/raw/northwind.xlsx`.
 - The Data Loader will:
   - Read sheets, coerce types, dedupe, validate FKs.
   - Create normalized (3NF) tables with PKs, FKs, and indexes.
@@ -125,7 +124,7 @@ source .venv/bin/activate  # macOS/Linux
 
 python - << 'PY'
 import os, sys
-sys.path.insert(0, 'text2sql-analytics')
+sys.path.insert(0, 'src')
 from text2sql_analytics.data_loader import DataLoader, LoaderConfig
 cfg = LoaderConfig(
   db_host=os.getenv('DB_HOST','localhost'),
@@ -158,7 +157,6 @@ source .venv/bin/activate  # macOS/Linux
 # OR
 .\.venv\Scripts\activate  # Windows
 
-cd text2sql-analytics
 python -m pytest -q --cov=src --cov-report=term-missing
 ```
 
@@ -202,7 +200,7 @@ Troubleshooting
 - Port conflicts 5432 vs 5433
   - Switch `DB_PORT` to the one you’re using and ensure docker compose mapping.
 - ModuleNotFoundError
-  - Run `pip install -e text2sql-analytics`. In ad‑hoc sessions, set `PYTHONPATH=$(pwd)` (macOS/Linux) or `$env:PYTHONPATH=(Get-Location).Path` (Windows).
+  - Run `pip install -e .`. In ad‑hoc sessions, set `PYTHONPATH=$(pwd)` (macOS/Linux) or `$env:PYTHONPATH=(Get-Location).Path` (Windows).
 - Slow queries
   - Confirm sanitized SQL includes `LIMIT`. The server enforces `statement_timeout=5000ms`.
 
@@ -224,7 +222,6 @@ source .venv/bin/activate  # macOS/Linux
 # OR
 .\.venv\Scripts\activate  # Windows
 
-cd text2sql-analytics
 uvicorn text2sql_analytics.api:app --reload
 ```
 
