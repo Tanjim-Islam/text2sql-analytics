@@ -38,7 +38,6 @@ ROLE_STATEMENTS: Iterable[str] = [
 
 
 BLOCK_MUTATIONS: Iterable[str] = [
-    # Ensure read-only role cannot create/alter/drop
     f"REVOKE CREATE ON SCHEMA public FROM {READ_ONLY_USER};",
     f"GRANT CONNECT ON DATABASE {DB_NAME} TO {READ_ONLY_USER};",
 ]
@@ -64,9 +63,9 @@ def main() -> int:
                         conn.rollback()
                 for stmt in BLOCK_MUTATIONS:
                     cur.execute(stmt)
-        print("schema and roles prepared")
+        print("[setup_database] schema and roles prepared")
     except Exception as exc:  # noqa: BLE001
-        print(f"connection failed: {exc}")
+        print(f"[setup_database] connection failed: {exc}")
         return 1
     return 0
 

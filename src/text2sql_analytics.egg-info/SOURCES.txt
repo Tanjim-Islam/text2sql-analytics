@@ -1,0 +1,15 @@
+setup.py
+src/text2sql_analytics/__init__.py
+src/text2sql_analytics/config.py
+src/text2sql_analytics/data_loader.py
+src/text2sql_analytics/database.py
+src/text2sql_analytics/query_validator.py
+src/text2sql_analytics/text2sql_engine.py
+src/text2sql_analytics.egg-info/PKG-INFO
+src/text2sql_analytics.egg-info/SOURCES.txt
+src/text2sql_analytics.egg-info/dependency_links.txt
+src/text2sql_analytics.egg-info/top_level.txt
+tests/test_data_loader.py
+tests/test_database.py
+tests/test_query_validator.py
+tests/test_text2sql_engine.py

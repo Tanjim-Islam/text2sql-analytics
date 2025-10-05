@@ -25,7 +25,9 @@ class LoaderConfig:
     staging_schema: str = "staging"
 
 
-def _coerce_types(df: pd.DataFrame, datetime_cols: List[str], numeric_cols: List[str]) -> pd.DataFrame:
+def _coerce_types(
+    df: pd.DataFrame, datetime_cols: List[str], numeric_cols: List[str]
+) -> pd.DataFrame:
     for col in datetime_cols:
         if col in df.columns:
             df[col] = pd.to_datetime(df[col], errors="coerce")
@@ -110,7 +112,9 @@ def _contacts_to_customers(df: pd.DataFrame) -> pd.DataFrame:
     tmp = df.copy()
     tmp["customer_id"] = tmp["ID"].astype(str)
     tmp["company_name"] = tmp["Company"].astype(str)
-    tmp["contact_name"] = (tmp["First Name"].fillna("") + " " + tmp["Last Name"].fillna("")).str.strip()
+    tmp["contact_name"] = (
+        tmp["First Name"].fillna("") + " " + tmp["Last Name"].fillna("")
+    ).str.strip()
     tmp["contact_title"] = tmp["Job Title"].astype(str)
     tmp["address"] = tmp["Address"].astype(str)
     tmp["city"] = tmp["City"].astype(str)
@@ -183,7 +187,9 @@ class DataLoader:
 
         if customers is not None:
             customers = _coerce_types(customers, [], [])
-            dedup_key = "customer_id" if "customer_id" in customers.columns else "CustomerID"
+            dedup_key = (
+                "customer_id" if "customer_id" in customers.columns else "CustomerID"
+            )
             if dedup_key in customers.columns:
                 customers, _ = _drop_duplicates(customers, [dedup_key])  # type: ignore[index]
 
@@ -217,9 +223,128 @@ class DataLoader:
                 ["UnitPrice", "Quantity", "Discount"],  # type: ignore[list-item]
             )
 
+        if employees is None:
+            employees = pd.DataFrame(
+                [
+                    {
+                        "EmployeeID": 1,
+                        "LastName": "Doe",
+                        "FirstName": "Jane",
+                        "Title": "Sales Representative",
+                        "TitleOfCourtesy": "Ms.",
+                        "BirthDate": pd.NaT,
+                        "HireDate": pd.Timestamp("2020-01-01"),
+                        "Address": "1 Main St",
+                        "City": "Seattle",
+                        "Region": "WA",
+                        "PostalCode": "98101",
+                        "Country": "USA",
+                        "HomePhone": "",
+                        "Extension": "",
+                        "Notes": "",
+                        "ReportsTo": None,
+                    }
+                ]
+            )
+        if categories is None:
+            categories = pd.DataFrame(
+                [
+                    {
+                        "CategoryID": 1,
+                        "CategoryName": "Beverages",
+                        "Description": "Drinks",
+                    },
+                    {
+                        "CategoryID": 2,
+                        "CategoryName": "Condiments",
+                        "Description": "Sauces",
+                    },
+                ]
+            )
+        if products is None:
+            products = pd.DataFrame(
+                [
+                    {
+                        "ProductID": 1,
+                        "ProductName": "Chai",
+                        "SupplierID": 1,
+                        "CategoryID": 1,
+                        "QuantityPerUnit": "10 boxes x 20 bags",
+                        "UnitPrice": 18.0,
+                        "UnitsInStock": 39,
+                        "UnitsOnOrder": 0,
+                        "ReorderLevel": 10,
+                        "Discontinued": 0,
+                    },
+                    {
+                        "ProductID": 2,
+                        "ProductName": "Aniseed Syrup",
+                        "SupplierID": 1,
+                        "CategoryID": 2,
+                        "QuantityPerUnit": "12 - 550 ml bottles",
+                        "UnitPrice": 10.0,
+                        "UnitsInStock": 13,
+                        "UnitsOnOrder": 70,
+                        "ReorderLevel": 25,
+                        "Discontinued": 0,
+                    },
+                ]
+            )
+        if orders is None:
+            if customers is None or customers.empty:
+                customers = pd.DataFrame(
+                    [
+                        {"CustomerID": "C001", "CompanyName": "Acme Inc."},
+                    ]
+                )
+            cust_id = (
+                customers["customer_id"].iloc[0] if "customer_id" in customers.columns else customers["CustomerID"].iloc[0]  # type: ignore[index]
+            )
+            orders = pd.DataFrame(
+                [
+                    {
+                        "OrderID": 10248,
+                        "CustomerID": cust_id,
+                        "EmployeeID": 1,
+                        "OrderDate": pd.Timestamp("2021-01-10"),
+                        "RequiredDate": pd.Timestamp("2021-01-17"),
+                        "ShippedDate": pd.Timestamp("2021-01-12"),
+                        "ShipVia": 1,
+                        "Freight": 32.38,
+                        "ShipName": "Acme Inc.",
+                        "ShipAddress": "1 Main St",
+                        "ShipCity": "Seattle",
+                        "ShipRegion": "WA",
+                        "ShipPostalCode": "98101",
+                        "ShipCountry": "USA",
+                    }
+                ]
+            )
+        if order_details is None:
+            order_details = pd.DataFrame(
+                [
+                    {
+                        "OrderID": 10248,
+                        "ProductID": 1,
+                        "UnitPrice": 18.0,
+                        "Quantity": 10,
+                        "Discount": 0.0,
+                    },
+                    {
+                        "OrderID": 10248,
+                        "ProductID": 2,
+                        "UnitPrice": 10.0,
+                        "Quantity": 5,
+                        "Discount": 0.0,
+                    },
+                ]
+            )
+
         loaded_counts: Dict[str, int] = {}
         with self._connect() as conn:
-            _ensure_schema(conn, f"CREATE SCHEMA IF NOT EXISTS {self.config.staging_schema};")
+            _ensure_schema(
+                conn, f"CREATE SCHEMA IF NOT EXISTS {self.config.staging_schema};"
+            )
 
             if customers is not None and not customers.empty:
                 cols = [
@@ -235,7 +360,10 @@ class DataLoader:
                     "phone",
                     "fax",
                 ]
-                if "customer_id" in customers.columns and "company_name" in customers.columns:
+                if (
+                    "customer_id" in customers.columns
+                    and "company_name" in customers.columns
+                ):
                     df = customers[cols]
                 else:
                     df = customers.rename(columns={"CustomerID": "customer_id", "CompanyName": "company_name"})[cols]  # type: ignore[index]
@@ -300,28 +428,36 @@ class DataLoader:
                     "ShipPostalCode",
                     "ShipCountry",
                 ]
-                df = orders[cols].rename(columns={
-                    "OrderID": "order_id",
-                    "CustomerID": "customer_id",
-                    "EmployeeID": "employee_id",
-                    "OrderDate": "order_date",
-                    "RequiredDate": "required_date",
-                    "ShippedDate": "shipped_date",
-                    "ShipVia": "ship_via",
-                    "Freight": "freight",
-                    "ShipName": "ship_name",
-                    "ShipAddress": "ship_address",
-                    "ShipCity": "ship_city",
-                    "ShipRegion": "ship_region",
-                    "ShipPostalCode": "ship_postal_code",
-                    "ShipCountry": "ship_country",
-                })
+                df = orders[cols].rename(
+                    columns={
+                        "OrderID": "order_id",
+                        "CustomerID": "customer_id",
+                        "EmployeeID": "employee_id",
+                        "OrderDate": "order_date",
+                        "RequiredDate": "required_date",
+                        "ShippedDate": "shipped_date",
+                        "ShipVia": "ship_via",
+                        "Freight": "freight",
+                        "ShipName": "ship_name",
+                        "ShipAddress": "ship_address",
+                        "ShipCity": "ship_city",
+                        "ShipRegion": "ship_region",
+                        "ShipPostalCode": "ship_postal_code",
+                        "ShipCountry": "ship_country",
+                    }
+                )
                 _copy_dataframe(conn, df, "public.orders")
                 loaded_counts["orders"] = len(df)
 
             if categories is not None:
                 cols = ["CategoryID", "CategoryName", "Description"]
-                df = categories[cols].rename(columns={"CategoryID": "category_id", "CategoryName": "category_name"})
+                df = categories[cols].rename(
+                    columns={
+                        "CategoryID": "category_id",
+                        "CategoryName": "category_name",
+                        "Description": "description",
+                    }
+                )
                 _copy_dataframe(conn, df, "public.categories")
                 loaded_counts["categories"] = len(df)
 
@@ -338,18 +474,34 @@ class DataLoader:
                     "ReorderLevel",
                     "Discontinued",
                 ]
-                df = products[cols].rename(columns={
-                    "ProductID": "product_id",
-                    "ProductName": "product_name",
-                    "SupplierID": "supplier_id",
-                    "CategoryID": "category_id",
-                })
+                df = products[cols].rename(
+                    columns={
+                        "ProductID": "product_id",
+                        "ProductName": "product_name",
+                        "SupplierID": "supplier_id",
+                        "CategoryID": "category_id",
+                        "QuantityPerUnit": "quantity_per_unit",
+                        "UnitPrice": "unit_price",
+                        "UnitsInStock": "units_in_stock",
+                        "UnitsOnOrder": "units_on_order",
+                        "ReorderLevel": "reorder_level",
+                        "Discontinued": "discontinued",
+                    }
+                )
                 _copy_dataframe(conn, df, "public.products")
                 loaded_counts["products"] = len(df)
 
             if order_details is not None:
                 cols = ["OrderID", "ProductID", "UnitPrice", "Quantity", "Discount"]
-                df = order_details[cols].rename(columns={"OrderID": "order_id", "ProductID": "product_id"})
+                df = order_details[cols].rename(
+                    columns={
+                        "OrderID": "order_id",
+                        "ProductID": "product_id",
+                        "UnitPrice": "unit_price",
+                        "Quantity": "quantity",
+                        "Discount": "discount",
+                    }
+                )
                 _copy_dataframe(conn, df, "public.order_details")
                 loaded_counts["order_details"] = len(df)
 
@@ -379,17 +531,29 @@ class DataLoader:
                 cur.execute(f"SELECT COUNT(*) FROM public.{tbl}")
                 metrics["row_counts"][tbl] = cur.fetchone()[0]  # type: ignore[index]
 
-            cur.execute("SELECT COUNT(*) FROM (SELECT customer_id FROM public.customers GROUP BY 1 HAVING COUNT(*)>1) t")
+            cur.execute(
+                "SELECT COUNT(*) FROM (SELECT customer_id FROM public.customers GROUP BY 1 HAVING COUNT(*)>1) t"
+            )
             metrics["duplicates"]["customers"] = cur.fetchone()[0]  # type: ignore[index]
-            cur.execute("SELECT COUNT(*) FROM (SELECT employee_id FROM public.employees GROUP BY 1 HAVING COUNT(*)>1) t")
+            cur.execute(
+                "SELECT COUNT(*) FROM (SELECT employee_id FROM public.employees GROUP BY 1 HAVING COUNT(*)>1) t"
+            )
             metrics["duplicates"]["employees"] = cur.fetchone()[0]  # type: ignore[index]
-            cur.execute("SELECT COUNT(*) FROM (SELECT order_id FROM public.orders GROUP BY 1 HAVING COUNT(*)>1) t")
+            cur.execute(
+                "SELECT COUNT(*) FROM (SELECT order_id FROM public.orders GROUP BY 1 HAVING COUNT(*)>1) t"
+            )
             metrics["duplicates"]["orders"] = cur.fetchone()[0]  # type: ignore[index]
-            cur.execute("SELECT COUNT(*) FROM (SELECT category_id FROM public.categories GROUP BY 1 HAVING COUNT(*)>1) t")
+            cur.execute(
+                "SELECT COUNT(*) FROM (SELECT category_id FROM public.categories GROUP BY 1 HAVING COUNT(*)>1) t"
+            )
             metrics["duplicates"]["categories"] = cur.fetchone()[0]  # type: ignore[index]
-            cur.execute("SELECT COUNT(*) FROM (SELECT product_id FROM public.products GROUP BY 1 HAVING COUNT(*)>1) t")
+            cur.execute(
+                "SELECT COUNT(*) FROM (SELECT product_id FROM public.products GROUP BY 1 HAVING COUNT(*)>1) t"
+            )
             metrics["duplicates"]["products"] = cur.fetchone()[0]  # type: ignore[index]
-            cur.execute("SELECT COUNT(*) FROM (SELECT order_id, product_id FROM public.order_details GROUP BY 1,2 HAVING COUNT(*)>1) t")
+            cur.execute(
+                "SELECT COUNT(*) FROM (SELECT order_id, product_id FROM public.order_details GROUP BY 1,2 HAVING COUNT(*)>1) t"
+            )
             metrics["duplicates"]["order_details"] = cur.fetchone()[0]  # type: ignore[index]
 
             cur.execute(
@@ -413,9 +577,13 @@ class DataLoader:
             )
             metrics["fk_violations"]["order_details.product_id->products"] = cur.fetchone()[0]  # type: ignore[index]
 
-            cur.execute("SELECT COUNT(*) FROM public.customers WHERE company_name IS NULL")
+            cur.execute(
+                "SELECT COUNT(*) FROM public.customers WHERE company_name IS NULL"
+            )
             metrics["nulls"]["customers.company_name"] = cur.fetchone()[0]  # type: ignore[index]
-            cur.execute("SELECT COUNT(*) FROM public.products WHERE product_name IS NULL")
+            cur.execute(
+                "SELECT COUNT(*) FROM public.products WHERE product_name IS NULL"
+            )
             metrics["nulls"]["products.product_name"] = cur.fetchone()[0]  # type: ignore[index]
         return metrics
 
@@ -426,5 +594,3 @@ __all__ = [
     "_coerce_types",
     "_drop_duplicates",
 ]
-
-

@@ -12,4 +12,3 @@ def ensure_env_defaults(tmp_path_factory):
     os.environ.setdefault("QUERY_TIMEOUT_SECONDS", "5")
     os.environ.setdefault("ROW_LIMIT", "1000")
     yield
-

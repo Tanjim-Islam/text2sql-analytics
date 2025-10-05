@@ -20,8 +20,10 @@ class Settings:
 
 def get_settings() -> Settings:
     database_url = os.getenv("DATABASE_URL") or (
-        f"postgresql+psycopg://{os.getenv('DB_USER_RO','ro')}:{os.getenv('DB_PASS_RO','ro_pass')}@"
-        f"{os.getenv('DB_HOST','localhost')}:{os.getenv('DB_PORT','5433')}/{os.getenv('DB_NAME','northwind')}"
+        "postgresql+psycopg://"
+        f"{os.getenv('DB_USER_RO', 'ro')}:{os.getenv('DB_PASS_RO', 'ro_pass')}@"
+        f"{os.getenv('DB_HOST', 'localhost')}:{os.getenv('DB_PORT', '5433')}/"
+        f"{os.getenv('DB_NAME', 'northwind')}"
     )
     return Settings(
         database_url=database_url,
@@ -31,4 +33,3 @@ def get_settings() -> Settings:
         gemini_model=os.getenv("GEMINI_MODEL"),
         log_level=os.getenv("LOG_LEVEL", "INFO"),
     )
-

@@ -1,29 +1,9 @@
-# Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
+.pytest_cache/
+htmlcov/
+.env
+env/
 venv/
 .venv/
-ENV/
 
-# Environment
-.env
-.env.local
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Database
-*.db
-*.sqlite
-*.sql.gz

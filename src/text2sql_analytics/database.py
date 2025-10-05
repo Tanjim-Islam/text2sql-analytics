@@ -17,7 +17,9 @@ class Database:
     @classmethod
     def from_env(cls) -> "Database":
         settings = get_settings()
-        connect_args = {"options": f"-c statement_timeout={(settings.query_timeout_seconds*1000)}"}
+        connect_args = {
+            "options": f"-c statement_timeout={(settings.query_timeout_seconds*1000)}"
+        }
         engine = create_engine(
             settings.database_url,
             pool_pre_ping=True,
@@ -40,4 +42,3 @@ class Database:
             result = conn.execute(text("SELECT 1 AS ok"))
             row = result.first()
             return row[0] if row else None
-
