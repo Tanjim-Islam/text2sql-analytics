@@ -16,6 +16,8 @@ class Settings:
     gemini_api_key: str | None
     gemini_model: str | None
     log_level: str
+    cache_ttl_seconds: int
+    enable_explain: bool
 
 
 def get_settings() -> Settings:
@@ -32,4 +34,6 @@ def get_settings() -> Settings:
         gemini_api_key=os.getenv("GEMINI_API_KEY"),
         gemini_model=os.getenv("GEMINI_MODEL"),
         log_level=os.getenv("LOG_LEVEL", "INFO"),
+        cache_ttl_seconds=int(os.getenv("CACHE_TTL_SECONDS", "300")),
+        enable_explain=os.getenv("ENABLE_EXPLAIN", "1") not in {"0", "false", "False"},
     )

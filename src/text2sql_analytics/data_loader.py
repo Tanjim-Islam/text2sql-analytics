@@ -78,6 +78,7 @@ def _copy_dataframe(conn: psycopg.Connection, df: pd.DataFrame, fq_table: str) -
     if df.empty:
         return
     csv_buf = io.StringIO()
+    
     df.to_csv(csv_buf, index=False)
     csv_buf.seek(0)
     with conn.cursor() as cur:
@@ -90,7 +91,8 @@ def _copy_dataframe(conn: psycopg.Connection, df: pd.DataFrame, fq_table: str) -
 
 def _contacts_to_customers(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Map a contacts-like worksheet into the normalized customers table shape.
+    Map a 'contacts-like' worksheet (columns: ID, Company, Last Name, First Name, ...)
+    into the normalized customers table shape.
     """
     expected_cols = {
         "ID",
@@ -137,8 +139,8 @@ def _contacts_to_customers(df: pd.DataFrame) -> pd.DataFrame:
         "phone",
         "fax",
     ]
-    out = tmp[cols].dropna(subset=["company_name"])  
-    out = out.drop_duplicates(subset=["customer_id"])  
+    out = tmp[cols].dropna(subset=["company_name"]) 
+    out = out.drop_duplicates(subset=["customer_id"]) 
     return out
 
 
@@ -171,12 +173,12 @@ class DataLoader:
         """
         sheets = _read_excel_sheets(self.config.excel_path)
 
-        customers = sheets.get("Customers") or sheets.get("customers")
-        employees = sheets.get("Employees") or sheets.get("employees")
-        orders = sheets.get("Orders") or sheets.get("orders")
-        order_details = sheets.get("Order Details") or sheets.get("order_details")
-        products = sheets.get("Products") or sheets.get("products")
-        categories = sheets.get("Categories") or sheets.get("categories")
+        customers = sheets.get("Customers", sheets.get("customers"))
+        employees = sheets.get("Employees", sheets.get("employees"))
+        orders = sheets.get("Orders", sheets.get("orders"))
+        order_details = sheets.get("Order Details", sheets.get("order_details"))
+        products = sheets.get("Products", sheets.get("products"))
+        categories = sheets.get("Categories", sheets.get("categories"))
 
         if customers is None:
             for sn, df in sheets.items():
@@ -223,6 +225,7 @@ class DataLoader:
                 ["UnitPrice", "Quantity", "Discount"],  # type: ignore[list-item]
             )
 
+        
         if employees is None:
             employees = pd.DataFrame(
                 [
@@ -291,6 +294,7 @@ class DataLoader:
                 ]
             )
         if orders is None:
+            
             if customers is None or customers.empty:
                 customers = pd.DataFrame(
                     [
@@ -340,6 +344,7 @@ class DataLoader:
                 ]
             )
 
+        
         loaded_counts: Dict[str, int] = {}
         with self._connect() as conn:
             _ensure_schema(
@@ -360,13 +365,13 @@ class DataLoader:
                     "phone",
                     "fax",
                 ]
-                if (
-                    "customer_id" in customers.columns
-                    and "company_name" in customers.columns
-                ):
-                    df = customers[cols]
-                else:
-                    df = customers.rename(columns={"CustomerID": "customer_id", "CompanyName": "company_name"})[cols]  # type: ignore[index]
+                base = customers.copy()
+                rename_map = {"CustomerID": "customer_id", "CompanyName": "company_name"}
+                base = base.rename(columns={k: v for k, v in rename_map.items() if k in base.columns})
+                for c in cols:
+                    if c not in base.columns:
+                        base[c] = pd.NA
+                df = base[cols]
                 _copy_dataframe(conn, df, "public.customers")
                 loaded_counts["customers"] = len(df)
 
@@ -530,7 +535,7 @@ class DataLoader:
             ]:
                 cur.execute(f"SELECT COUNT(*) FROM public.{tbl}")
                 metrics["row_counts"][tbl] = cur.fetchone()[0]  # type: ignore[index]
-
+            
             cur.execute(
                 "SELECT COUNT(*) FROM (SELECT customer_id FROM public.customers GROUP BY 1 HAVING COUNT(*)>1) t"
             )
@@ -555,7 +560,7 @@ class DataLoader:
                 "SELECT COUNT(*) FROM (SELECT order_id, product_id FROM public.order_details GROUP BY 1,2 HAVING COUNT(*)>1) t"
             )
             metrics["duplicates"]["order_details"] = cur.fetchone()[0]  # type: ignore[index]
-
+            
             cur.execute(
                 "SELECT COUNT(*) FROM public.orders o LEFT JOIN public.customers c ON o.customer_id=c.customer_id "
                 "WHERE o.customer_id IS NOT NULL AND c.customer_id IS NULL"
@@ -576,7 +581,7 @@ class DataLoader:
                 "WHERE p.product_id IS NULL"
             )
             metrics["fk_violations"]["order_details.product_id->products"] = cur.fetchone()[0]  # type: ignore[index]
-
+            
             cur.execute(
                 "SELECT COUNT(*) FROM public.customers WHERE company_name IS NULL"
             )

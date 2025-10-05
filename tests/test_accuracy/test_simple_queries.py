@@ -1,4 +1,4 @@
-from src.text2sql_engine import Text2SQLEngine
+from text2sql_analytics.text2sql_engine import Text2SQLEngine
 
 
 def test_count_customers_executes():

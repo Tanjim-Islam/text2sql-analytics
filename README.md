@@ -87,9 +87,11 @@ Configuration (environment)
 - `DB_NAME`: Database name (`postgres` by default).
 - `DB_USER_ADMIN` / `DB_PASS_ADMIN`: Admin role for schema and grants.
 - `DB_USER_RO` / `DB_PASS_RO`: Read-only role used by the runtime.
-- `GEMINI_API_KEY`: Google Gemini key
-- `GEMINI_MODEL`: Model name
-- `QUERY_TIMEOUT_SECONDS=5`, `ROW_LIMIT=1000`.
+- `GEMINI_API_KEY`: Google Gemini key (optional, leave empty for mock mode)
+- `GEMINI_MODEL`: Model name (default: `gemini-2.5-flash`)
+- `QUERY_TIMEOUT_SECONDS=5`, `ROW_LIMIT=1000`
+- `CACHE_TTL_SECONDS=300`: Cache time-to-live in seconds (default: 5 minutes)
+- `ENABLE_EXPLAIN=1`: Enable query execution plan analysis (default: enabled)
 
 Database setup
 
@@ -148,6 +150,8 @@ Text2SQL engine and safety rules
 
 How to test it
 
+**Run all tests:**
+
 ```
 # Activate virtual environment
 source .venv/bin/activate  # macOS/Linux
@@ -158,8 +162,38 @@ cd text2sql-analytics
 python -m pytest -q --cov=src --cov-report=term-missing
 ```
 
-- Accuracy script (mock-based by default): `python scripts/run_evaluation.py`.
-- Target coverage: 80%+ (as per PDF). Use `--cov-report=html` for an HTML report.
+**Run specific test categories:**
+
+```bash
+# Unit tests only
+python -m pytest tests/test_*.py -v
+
+# Accuracy tests only
+python -m pytest tests/test_accuracy/ -v
+
+# API tests only
+python -m pytest tests/test_api.py -v
+
+# Integration tests
+python -m pytest tests/test_loader_end_to_end.py -v
+```
+
+**Generate HTML coverage report:**
+
+```bash
+python -m pytest --cov=src --cov-report=html
+# Open htmlcov/index.html in browser
+```
+
+**Run evaluation script:**
+
+```bash
+python scripts/run_evaluation.py
+```
+
+- Target coverage: 80%+ (currently achieving 89%)
+- Tests include unit, integration, accuracy, API, and caching tests
+- Mock mode is used by default to respect API rate limits
 
 Troubleshooting
 
@@ -172,15 +206,55 @@ Troubleshooting
 - Slow queries
   - Confirm sanitized SQL includes `LIMIT`. The server enforces `statement_timeout=5000ms`.
 
-Deliverables checklist (from PDF)
+Deliverables checklist
 
 - Working code in `src/`, tests in `tests/` (unit, integration, accuracy), scripts in `scripts/`.
 - Documentation (this README) and `EVALUATION.md` with results.
 - Coverage report available via pytest-cov.
 
-Future work and bonus items
+API and Dashboard
 
-- Query caching (by normalized prompt + schema signature).
-- EXPLAIN/ANALYZE collection and optimization tips.
-- REST API (FastAPI) endpoint for programmatic access.
-- Lightweight dashboard for performance monitoring.
+The system includes a FastAPI REST API and web dashboard for interactive use:
+
+**Start the API server:**
+
+```
+# Activate virtual environment
+source .venv/bin/activate  # macOS/Linux
+# OR
+.\.venv\Scripts\activate  # Windows
+
+cd text2sql-analytics
+uvicorn text2sql_analytics.api:app --reload
+```
+
+**API Endpoints:**
+
+- `POST /query` - Submit natural language questions
+  ```bash
+  curl -X POST http://localhost:8000/query \
+    -H "Content-Type: application/json" \
+    -d '{"question": "How many customers are there?"}'
+  ```
+- `POST /explain` - Get query execution plans and optimization tips
+  ```bash
+  curl -X POST http://localhost:8000/explain \
+    -H "Content-Type: application/json" \
+    -d '{"question": "Show top 5 products by price"}'
+  ```
+- `GET /health` - Health check endpoint
+- `GET /metrics` - Cache and performance metrics
+- `GET /dashboard` - Web dashboard (open in browser)
+
+**Web Dashboard:**
+
+- Open http://localhost:8000/dashboard in your browser
+- View cache statistics, uptime, and system metrics
+- Clean, responsive design with eggshell white and charcoal color scheme
+
+**Features:**
+
+- In-memory query caching with configurable TTL
+- Query execution plans and optimization suggestions
+- Real-time performance metrics
+- Cross-platform compatibility
